@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Comma Quote – OK Stuv</title>
+  <link rel="stylesheet" href="../style.css">
+  <style>
+    .tool-container {
+      background: #fff;
+      padding: 2rem;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      margin-top: 1rem;
+    }
+    textarea {
+      width: 100%;
+      height: 150px;
+      margin-bottom: 1.5rem;
+      padding: 1rem;
+      font-family: monospace;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      resize: vertical;
+    }
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
+      align-items: center;
+    }
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+    }
+    label {
+      font-size: 0.85rem;
+      color: #666;
+      font-weight: bold;
+    }
+    select, input[type="text"] {
+      padding: 0.4rem;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 3px;
+    }
+    button {
+      padding: 0.6rem 1.2rem;
+      font-size: 1rem;
+      background: #444;
+      color: #fff;
+      border: none;
+      border-radius: 3px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    button:hover {
+      background: #111;
+    }
+    button.copy-btn {
+      background: #28a745;
+    }
+    button.copy-btn:hover {
+      background: #218838;
+    }
+    .output-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <a class="site-title" href="../index.html">OK Stuv</a>
+  <nav>
+    <a href="../info/index.html">About Us</a>
+    <a href="../info/index.html#author">Author</a>
+    <a href="../info/index.html#faq">FAQ</a>
+    <a href="../privacy-policy/index.html">Privacy Policy</a>
+    <a href="../welcome/index.html">Welcome</a>
+  </nav>
+</header>
+
+<main>
+  <h1>Comma Quote</h1>
+  <p>Convert lists into formatted strings for SQL, programming, or data processing. No ads, just the tool.</p>
+
+  <div class="tool-container">
+    <label for="input">Input List (one item per line or space separated)</label>
+    <textarea id="input" placeholder="Paste your list here..."></textarea>
+
+    <div class="controls">
+      <div class="control-group">
+        <label for="quote">Quote Type</label>
+        <select id="quote">
+          <option value="">None</option>
+          <option value="'" selected>Single (')</option>
+          <option value='"' >Double (")</option>
+        </select>
+      </div>
+
+      <div class="control-group">
+        <label for="separator">Separator</label>
+        <select id="separator">
+          <option value=", " selected>Comma (,)</option>
+          <option value="; ">Semicolon (;)</option>
+          <option value="|">Pipe (|)</option>
+          <option value=" ">Space</option>
+          <option value="\n">New Line</option>
+          <option value="custom">Custom...</option>
+        </select>
+      </div>
+
+      <div id="custom-separator-group" class="control-group" style="display:none;">
+        <label for="custom-separator">Custom Separator</label>
+        <input type="text" id="custom-separator" value=", " size="5">
+      </div>
+
+      <div class="control-group" style="flex-direction: row; align-items: center; gap: 0.5rem; margin-top: 1rem;">
+        <input type="checkbox" id="trim" checked>
+        <label for="trim" style="margin-bottom: 0;">Trim Whitespace</label>
+      </div>
+    </div>
+
+    <div class="output-header">
+      <label for="output">Output String</label>
+      <button id="copy" class="copy-btn">Copy to Clipboard</button>
+    </div>
+    <textarea id="output" readonly placeholder="Result will appear here..."></textarea>
+  </div>
+</main>
+
+<footer>
+  <p>OK Stuv &mdash; It's just OK. &nbsp;|&nbsp; <a href="../privacy-policy/index.html">Privacy Policy</a></p>
+</footer>
+
+<script>
+  const inputEl = document.getElementById('input');
+  const outputEl = document.getElementById('output');
+  const quoteEl = document.getElementById('quote');
+  const separatorEl = document.getElementById('separator');
+  const customSepGroup = document.getElementById('custom-separator-group');
+  const customSepEl = document.getElementById('custom-separator');
+  const trimEl = document.getElementById('trim');
+  const copyBtn = document.getElementById('copy');
+
+  function process() {
+    const rawValue = inputEl.value;
+    if (!rawValue) {
+      outputEl.value = '';
+      return;
+    }
+
+    // Split by newlines or commas (standard delimiter behavior)
+    let items = rawValue.split(/[\n,]+/).filter(item => item.trim().length > 0);
+    
+    if (trimEl.checked) {
+      items = items.map(item => item.trim());
+    }
+
+    const quote = quoteEl.value;
+    let separator = separatorEl.value;
+    if (separator === 'custom') {
+      separator = customSepEl.value;
+    } else if (separator === '\\n') {
+      separator = '\n';
+    }
+
+    const result = items
+      .map(item => `${quote}${item}${quote}`)
+      .join(separator);
+
+    outputEl.value = result;
+  }
+
+  separatorEl.addEventListener('change', () => {
+    customSepGroup.style.display = separatorEl.value === 'custom' ? 'flex' : 'none';
+    process();
+  });
+
+  [inputEl, quoteEl, customSepEl, trimEl].forEach(el => {
+    el.addEventListener('input', process);
+  });
+
+  copyBtn.addEventListener('click', () => {
+    outputEl.select();
+    document.execCommand('copy');
+    const originalText = copyBtn.innerText;
+    copyBtn.innerText = 'Copied!';
+    setTimeout(() => {
+      copyBtn.innerText = originalText;
+    }, 2000);
+  });
+
+  // Initial process if there's any value (e.g. on reload)
+  process();
+</script>
+
+</body>
+</html>
