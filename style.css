@@ -58,6 +58,21 @@ figcaption { font-size: 0.85rem; color: #666; margin-top: 0.6rem; line-height: 1
 .post-list li { border-top: 1px solid #e8e8e4; padding: 2rem 0; }
 .post-list li:last-child { border-bottom: 1px solid #e8e8e4; }
 .post-list .post-date { font-size: 0.8rem; color: #999; margin-bottom: 0.4rem; }
+.post-list .post-hero {
+  display: block;
+  margin-bottom: 1rem;
+  overflow: hidden;
+  border-radius: 4px;
+}
+.post-list .post-hero img {
+  width: 100%;
+  height: auto;
+  display: block;
+  transition: transform 0.2s ease-in-out;
+}
+.post-list .post-hero:hover img {
+  transform: scale(1.02);
+}
 .post-list h2 { margin: 0 0 0.5rem; font-size: 1.2rem; }
 .post-list h2 a { text-decoration: none; color: #111; }
 .post-list h2 a:hover { text-decoration: underline; }
