@@ -26,9 +26,6 @@ window.addEventListener('keypress', function(e) {
         plotTrajectory();
 }, false);
 
-// TODO Delay this, to prevent it locking the UI.
-window.addEventListener('resize', scale, false);
-
 /**
  * Terminates the trajectory computation background thread.
  */
@@ -84,9 +81,9 @@ function plotTrajectory() {
     worker.postMessage(input);
     
     worker.onmessage = function(e) {
-        trajectoryInVacuum = e.data.trajectoryInVacuum;
-        bounds = e.data.bounds;
-        trajectory = e.data.trajectory;
+        var trajectoryInVacuum = e.data.trajectoryInVacuum;
+        var bounds = e.data.bounds;
+        var trajectory = e.data.trajectory;
         worker.terminate();
         
         var initialKineticEnergy = 0.0005 * input.mass * input.velocity * input.velocity;
@@ -97,8 +94,8 @@ function plotTrajectory() {
     }
 }
 
-function renderGraph() {
-    settings = {
+function renderGraph(trajectory, trajectoryInVacuum, bounds) {
+    var settings = {
 		xGridlineCount: 10,
 		yGridlineCount: 10,
 		
@@ -128,9 +125,8 @@ function renderGraph() {
 	
 	// Remove the graph, if it already exists.
 	graphContainer.innerHTML = "";
-    var boundingBox = graphContainer.getBoundingClientRect();
-    
-	graph = new Graph(boundingBox.width, boundingBox.height, settings);
+	
+	graph = new Graph(835, 500, settings);
 	graph.draw();
 	graph.appendTo(graphContainer);
 	
@@ -172,13 +168,6 @@ function updateFlightStats(duration, distance, height, energy, precision) {
     document.getElementById("flight-height").textContent   = height.toFixed(precision);
     document.getElementById("kinetic-energy").textContent  = energy.toFixed(precision);
 };
-
-/**
- * Scale the graph to the size of its container.
- */
-function scale() {
-    renderGraph();
-}
 
 // TODO: Write validation functions for the input and validate input before
 //       performing calculations.

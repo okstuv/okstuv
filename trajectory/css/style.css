@@ -1,91 +1,75 @@
-body {
-    width: 100%;
-    height: 100%;
-    margin: 0;
-    font: 14pt sans-serif;
-    color: #333;
-}
-
-#graph-container {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 74.5%;
-    height: 100%;
-}
-
 #control-panel {
     position: absolute;
-    bottom: 0;
-    right: 0;
-    width: 25%;
-    height: 100%;
+    left: 850px;
+    top : 25px;
+
+    width: auto;
+
+    font: 12pt Calibri, Arial, Helvetica, sans-serif;
+}
+
+#control-panel fieldset {
+    float: left;
+
     overflow: hidden;
-    background: #fff;
-    box-shadow: -.1em 0 0.8em #888;
+
+    padding: 0.75em;
+    margin: 0.5em;
 }
 
-h2 {
-    position: relative;
-    top: 0;
-    right: 0;
+#control-panel legend {
+    font-weight: bold;
+    font-size: 120%;
+}
+
+#control-panel label {
+    font-size: 10.5pt;
+
     margin: 0;
-    width: 25%;
-    padding: .3333333em 0;
-    background: #333;
-    text-align: center;
-    display: table-cell;
-    font-size: 1em;
-    color: #fff;
 }
 
-#input-fields {
-    position: relative;
-    padding: 2%;
-    overflow-x: hidden;
-    height: 100%;
-}
-
-#controls {
-    position: fixed;
-    right: 0;
-    bottom: 0;
-    background: inherit;
-    padding: 0 1% 1% 1%;
-    width: 23%;
-}
-
-label {
-    font-style: italic;
-}
-
-input {
+#control-panel input, #control-panel select {
     display: block;
-    width: 90%;
-    margin: 0.2em 0 4% 0;
-    padding: 0.15em;
-    line-height: 1.5;
+    margin: 0.25em 0 0.4em 0;
+
+    font:inherit;
+    font-size: 12pt;
 }
 
-#input-fields input {
-    background-color: #ffffff;
-    border: 1px solid #cccccc;
-    box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
-    border-radius: 4px;
+#control-panel input[type="checkbox"], input[type="radio"] {
+    display: inline;
 }
 
-label, input {
-    font-size: 0.9em;
-    margin-left: 3%;
+#control-panel input[type="button"] {
+    margin: 0.75em 0 0 0;
 }
 
-input[type="button"] {
-    font-size: 0.8em;
-    margin-bottom: 0.6em;
-    height: 2.5em;
-    text-decoration: none;
+label, input[type=button], input[type=submit], button {
+    cursor: pointer;
 }
 
-#flight-stats {
-    display: none;
+table {
+    font: 11pt Calibri;
+}
+
+th, td {
+    text-align: left;
+    padding: 0.2em 0.4em;
+}
+
+thead {
+    font: inherit;
+    font-size: 120%;
+}
+
+td > input {
+    width: 8em;
+}
+
+td > select {
+    width: 100%
+}
+
+.unit {
+    font-style: italic;
 }
