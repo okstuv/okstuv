@@ -1,7 +1,14 @@
+main.trajectory-app {
+    max-width: none;
+    margin: 0;
+    padding: 2rem;
+    position: relative;
+}
+
 #control-panel {
     position: absolute;
-    left: 850px;
-    top : 120px;
+    left: 880px;
+    top : 2rem;
 
     width: auto;
 
