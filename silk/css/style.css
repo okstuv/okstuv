@@ -1,0 +1,237 @@
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #000;
+    overflow: hidden;
+    font-family: sans-serif;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+#canvas-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+}
+
+#stars-layer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    pointer-events: none;
+}
+
+#cursor-layer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 2;
+    pointer-events: none;
+    /* Let clicks pass through to WebGL */
+}
+
+/* Silk UI Refactor */
+body {
+    background: black;
+    color: #aaa;
+    margin: 0;
+    overflow: hidden;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+#ui-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none !important;
+    /* Force pass-through */
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.header {
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    pointer-events: auto;
+}
+
+.brand {
+    font-size: 24px;
+    letter-spacing: 2px;
+    color: #eee;
+    text-transform: uppercase;
+}
+
+.top-actions button {
+    background: #333;
+    border: none;
+    color: #eee;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-left: 10px;
+    font-size: 14px;
+    transition: background 0.2s;
+}
+
+.top-actions button:hover {
+    background: #555;
+}
+
+.controls-panel {
+    pointer-events: auto;
+    background: rgba(0, 0, 0, 0.8);
+    width: 300px;
+    padding: 20px;
+    margin: 20px;
+    border-radius: 8px;
+    /* Position bottom-left roughly like screenshot? Or keep detachable? 
+       Screenshot shows it floating. Let's put it Top-Left or Bottom-Left. 
+       Actually, screenshot #3 implies it's a floating modal or fixed panel. 
+       Let's put it on the Left side. */
+    align-self: flex-start;
+    backdrop-filter: blur(5px);
+    transition: opacity 0.3s, transform 0.3s;
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.controls-panel.hidden {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateX(-20px);
+}
+
+.top-actions button.active {
+    background: #555;
+    color: #fff;
+    box-shadow: 0 0 5px rgba(255, 255, 255, 0.2);
+}
+
+/* Color Wheel Grid */
+.color-wheel {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    justify-items: center;
+    margin-bottom: 10px;
+}
+
+.color-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.color-btn.active {
+    border-color: white;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+    transform: scale(1.1);
+}
+
+.center-btn {
+    grid-column: 2;
+    grid-row: 2;
+}
+
+.drag-hint {
+    text-align: center;
+    font-size: 12px;
+    margin-bottom: 20px;
+    color: #666;
+}
+
+/* Slider */
+.slider-container {
+    margin-bottom: 20px;
+}
+
+input[type=range] {
+    width: 100%;
+    margin-bottom: 5px;
+}
+
+.setting-label {
+    text-align: right;
+    font-size: 12px;
+    color: #888;
+}
+
+/* Toggles */
+.toggle-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    font-size: 13px;
+}
+
+.toggle-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 13px;
+    color: #666;
+}
+
+.toggle-btn.on {
+    color: #4CAF50;
+    font-weight: bold;
+}
+
+.toggle-btn.off {
+    color: #666;
+}
+
+#canvas-container,
+#cursor-layer {
+    position: fixed;
+    top: 0;
+    left: 0;
+}
+
+#cursor-layer {
+    pointer-events: none;
+    z-index: 5;
+}
+
+#intro-text {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 24px;
+    letter-spacing: 2px;
+    pointer-events: none;
+    z-index: 8;
+    transition: opacity 0.5s;
+}
+
+#intro-text.hidden {
+    opacity: 0;
+}

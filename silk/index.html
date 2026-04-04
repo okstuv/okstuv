@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+    <title>Lumina Draw</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+    <div id="ui-container">
+        <div class="header">
+            <div class="brand">Silk</div>
+            <div class="top-actions">
+                <button id="btn-controls">Controls</button>
+                <button id="btn-new">New</button>
+                <button id="btn-save"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2">
+                        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                        <circle cx="12" cy="13" r="4" />
+                    </svg></button>
+            </div>
+        </div>
+
+        <div class="controls-panel hidden">
+            <!-- Color Wheel (Hexagon Layout) -->
+            <div class="color-wheel">
+                <div class="color-btn" data-color="#E91E63" style="background: #E91E63;"></div> <!-- Pink -->
+                <div class="color-btn" data-color="#9C27B0" style="background: #9C27B0;"></div> <!-- Purple -->
+                <div class="color-btn" data-color="#2196F3" style="background: #2196F3;"></div> <!-- Blue -->
+                <div class="color-btn center-btn" data-color="#888888" style="background: #555;"></div>
+                <!-- Grey/Center -->
+                <div class="color-btn" data-color="#4CAF50" style="background: #4CAF50;"></div> <!-- Green -->
+                <div class="color-btn" data-color="#FFEB3B" style="background: #FFEB3B;"></div> <!-- Yellow -->
+                <div class="color-btn" data-color="#FF9800" style="background: #FF9800;"></div> <!-- Orange -->
+            </div>
+
+            <!-- Symmetry Slider -->
+            <div class="slider-container">
+                <input type="range" id="symmetry-slider" min="0" max="6" value="6" step="1">
+                <div id="symmetry-label" class="setting-label">6-fold symmetry</div>
+            </div>
+
+            <!-- Toggles -->
+            <div class="toggles">
+                <div class="toggle-row">
+                    <span>Mirror across center</span>
+                    <button id="toggle-mirror" class="toggle-btn on">On</button>
+                </div>
+                <div class="toggle-row">
+                    <span>Spiral towards center</span>
+                    <button id="toggle-spiral" class="toggle-btn off">Off</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="canvas-container">
+        <!-- Main WebGL Persistence Layer -->
+    </div>
+    <!-- Overlay for cursor/UI feedback -->
+    <div id="intro-text">Draw something.</div>
+    <canvas id="cursor-layer"></canvas>
+    <script type="module" src="js/app.js?v=44"></script>
+</body>
+
+</html>
