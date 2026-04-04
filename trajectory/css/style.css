@@ -1,54 +1,74 @@
 main.trajectory-app {
-    max-width: none;
-    margin: 0;
-    padding: 2rem;
-    position: relative;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+@media (min-width: 1000px) {
+    main.trajectory-app {
+        flex-direction: row;
+        align-items: flex-start;
+        flex-wrap: wrap;
+    }
 }
 
 #control-panel {
-    position: absolute;
-    left: 880px;
-    top : 2rem;
-
-    width: auto;
-
+    width: 100%;
     font: 12pt Calibri, Arial, Helvetica, sans-serif;
+    order: 1;
+}
+
+@media (min-width: 1000px) {
+    #control-panel {
+        width: 320px;
+        order: 2;
+    }
+}
+
+#graph-container {
+    width: 100%;
+    order: 2;
+}
+
+@media (min-width: 1000px) {
+    #graph-container {
+        flex: 1;
+        order: 1;
+    }
+}
+
+#flight-stats {
+    width: 100%;
+    order: 3;
+}
+
+@media (min-width: 1000px) {
+    #flight-stats {
+        width: 100%;
+    }
 }
 
 #control-panel fieldset {
-    float: left;
-
-    overflow: hidden;
-
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
     padding: 0.75em;
-    margin: 0.5em;
-}
-
-#control-panel legend {
-    font-weight: bold;
-    font-size: 120%;
+    margin: 0.5em 0;
+    width: 100%;
 }
 
 #control-panel label {
+    flex: 1 1 140px;
     font-size: 10.5pt;
-
     margin: 0;
 }
 
-#control-panel input, #control-panel select {
-    display: block;
-    margin: 0.25em 0 0.4em 0;
-
-    font:inherit;
-    font-size: 12pt;
-}
-
-#control-panel input[type="checkbox"], input[type="radio"] {
-    display: inline;
-}
-
 #control-panel input[type="button"] {
-    margin: 0.75em 0 0 0;
+    width: 100%;
+    margin-top: 1rem;
 }
 
 label, input[type=button], input[type=submit], button {
