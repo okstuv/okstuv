@@ -113,3 +113,10 @@ footer a { color: #aaa; }
   border-radius: 3px;
 }
 .games a:hover { border-color: #888; color: #111; }
+
+.inline-thumb {
+  height: 1.5em;
+  vertical-align: middle;
+  margin-right: 0.5rem;
+  border-radius: 2px;
+}
