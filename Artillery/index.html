@@ -1,0 +1,1817 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FDC Artillery Plotting — M777A2 Mission Generator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --paper-base: #f4efe2;
+      --paper-alt: #ede6d3;
+      --paper-dark: #e2d8be;
+      --ink-primary: #111211;
+      --ink-secondary: #373936;
+      --ink-muted: #5c605a;
+      --rule-dashed: #6b685e;
+      --accent-stamp: #8f2419;
+      --accent-ok: #1b5e20;
+      --font-mono: "JetBrains Mono", "Courier New", Courier, monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      background-color: #d7cfb9;
+      color: var(--ink-primary);
+      font-family: var(--font-mono);
+      font-size: 14px;
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .teleprinter-sheet {
+      position: relative;
+      max-width: 860px;
+      margin: 24px auto;
+      background-color: var(--paper-base);
+      background-image:
+        repeating-linear-gradient(
+          to bottom,
+          transparent 0px,
+          transparent 31px,
+          rgba(17, 18, 17, 0.025) 31px,
+          rgba(17, 18, 17, 0.025) 32px
+        );
+      box-shadow:
+        0 12px 32px rgba(17, 18, 17, 0.22),
+        0 2px 6px rgba(17, 18, 17, 0.14);
+      border-top: 4px solid var(--paper-dark);
+      border-bottom: 4px solid var(--paper-dark);
+      padding: 28px 54px 36px 54px;
+    }
+
+    /* Tractor-feed perforated strips along left and right edges */
+    .teleprinter-sheet::before,
+    .teleprinter-sheet::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 28px;
+      background-color: var(--paper-alt);
+      background-image:
+        radial-gradient(circle, #8f8772 2.4px, transparent 2.8px);
+      background-size: 28px 24px;
+      background-position: center 12px;
+      pointer-events: none;
+    }
+
+    .teleprinter-sheet::before {
+      left: 0;
+      border-right: 1px dashed rgba(17, 18, 17, 0.28);
+    }
+
+    .teleprinter-sheet::after {
+      right: 0;
+      border-left: 1px dashed rgba(17, 18, 17, 0.28);
+    }
+
+    @media (max-width: 640px) {
+      .teleprinter-sheet {
+        margin: 0;
+        padding: 20px 34px 28px 34px;
+      }
+      .teleprinter-sheet::before,
+      .teleprinter-sheet::after {
+        width: 18px;
+        background-size: 18px 24px;
+      }
+    }
+
+    .top-banner {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      font-size: 11.5px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--ink-secondary);
+      margin-bottom: 10px;
+    }
+
+    .sound-toggle-btn {
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 3px 8px;
+      border: 1.5px solid var(--ink-primary);
+      background-color: var(--paper-alt);
+      color: var(--ink-primary);
+      cursor: pointer;
+      border-radius: 0;
+    }
+
+    .sound-toggle-btn:hover {
+      background-color: var(--paper-dark);
+    }
+
+    .sound-toggle-btn.muted {
+      color: var(--ink-muted);
+      border-color: var(--ink-muted);
+      background-color: #fbf8f1;
+    }
+
+    .stamp-badge {
+      display: inline-block;
+      border: 1.5px solid var(--ink-primary);
+      padding: 2px 8px;
+      font-weight: 700;
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: var(--paper-alt);
+    }
+
+    h1 {
+      margin: 0 0 6px 0;
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .subtitle {
+      margin: 0;
+      font-size: 12.5px;
+      color: var(--ink-secondary);
+    }
+
+    hr.tp-rule {
+      border: none;
+      border-top: 1.5px dashed var(--rule-dashed);
+      margin: 20px 0;
+    }
+
+    hr.tp-rule.solid-thin {
+      border-top: 1px solid rgba(17, 18, 17, 0.25);
+      margin: 14px 0;
+    }
+
+    .section-header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .section-title {
+      margin: 0;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .controls-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: flex-end;
+    }
+
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      flex: 1 1 240px;
+    }
+
+    .field-group.compact {
+      flex: 1 1 170px;
+    }
+
+    label {
+      font-size: 11.5px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--ink-secondary);
+    }
+
+    select,
+    input[type="number"] {
+      width: 100%;
+      font-family: var(--font-mono);
+      font-size: 13.5px;
+      padding: 8px 10px;
+      color: var(--ink-primary);
+      background-color: #fbf8f1;
+      border: 1.5px solid var(--ink-primary);
+      border-radius: 0;
+      outline: none;
+    }
+
+    select:focus,
+    input[type="number"]:focus {
+      background-color: #ffffff;
+      box-shadow: 0 0 0 2px rgba(17, 18, 17, 0.18);
+    }
+
+    button.action-btn {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      padding: 9px 14px;
+      cursor: pointer;
+      border: 1.5px solid var(--ink-primary);
+      border-radius: 0;
+      transition: background-color 0.12s ease, color 0.12s ease, transform 0.08s ease;
+    }
+
+    button.action-btn:active {
+      transform: translateY(1px);
+    }
+
+    button.primary {
+      background-color: var(--ink-primary);
+      color: var(--paper-base);
+    }
+
+    button.primary:hover {
+      background-color: #2b2d2b;
+    }
+
+    button.secondary {
+      background-color: var(--paper-alt);
+      color: var(--ink-primary);
+    }
+
+    button.secondary:hover {
+      background-color: var(--paper-dark);
+    }
+
+    button.fire-btn {
+      background-color: var(--accent-stamp);
+      border-color: var(--ink-primary);
+      color: #fbf8f1;
+      padding: 10px 20px;
+      font-size: 13px;
+      letter-spacing: 0.08em;
+      box-shadow: 2px 2px 0 var(--ink-primary);
+    }
+
+    button.fire-btn:hover {
+      background-color: #731b12;
+    }
+
+    .briefing-box {
+      background-color: var(--paper-alt);
+      border: 1px solid rgba(17, 18, 17, 0.35);
+      padding: 16px 18px;
+    }
+
+    .briefing-meta-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 10px 18px;
+      margin: 12px 0 14px 0;
+      padding: 10px 12px;
+      background-color: #fbf8f1;
+      border-left: 3px solid var(--ink-primary);
+    }
+
+    .meta-item .k {
+      display: block;
+      font-size: 10.5px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--ink-muted);
+    }
+
+    .meta-item .v {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--ink-primary);
+    }
+
+    .mission-summary {
+      margin: 0 0 12px 0;
+      font-size: 13.5px;
+    }
+
+    .intel-list {
+      margin: 0;
+      padding-left: 18px;
+    }
+
+    .intel-list li {
+      margin-bottom: 5px;
+      font-size: 13px;
+    }
+
+    .guide-panel {
+      margin-top: 12px;
+      background-color: #fbf8f1;
+      border: 1.5px solid var(--ink-primary);
+      padding: 16px 18px;
+    }
+
+    .guide-panel[hidden] {
+      display: none;
+    }
+
+    .guide-subhead {
+      margin: 0 0 6px 0;
+      font-size: 12.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .guide-steps {
+      margin: 8px 0 0 0;
+      padding-left: 20px;
+    }
+
+    .guide-steps li {
+      margin-bottom: 6px;
+      font-size: 13px;
+    }
+
+    .firing-box {
+      background-color: var(--paper-alt);
+      border: 1.5px solid var(--ink-primary);
+      padding: 16px 18px;
+    }
+
+    .teleprinter-sheet.recoil {
+      animation: tp-recoil 0.24s ease-out;
+    }
+
+    @keyframes tp-recoil {
+      0% { transform: translateY(0px); }
+      35% { transform: translateY(4px); }
+      100% { transform: translateY(0px); }
+    }
+
+    .error-msg {
+      margin-top: 10px;
+      color: var(--accent-stamp);
+      font-weight: 700;
+      font-size: 12.5px;
+    }
+
+    .grading-box {
+      margin-top: 16px;
+      padding: 16px 18px;
+      border: 1.5px solid var(--ink-primary);
+      background-color: var(--paper-alt);
+    }
+
+    .grading-box[hidden] {
+      display: none;
+    }
+
+    .verdict-line {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 12px;
+      padding-bottom: 10px;
+      border-bottom: 1px dashed var(--rule-dashed);
+    }
+
+    .verdict-badge {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      padding: 4px 10px;
+      border: 2px solid currentColor;
+    }
+
+    .verdict-badge.on-target {
+      color: var(--accent-ok);
+      background-color: #e8f3e9;
+    }
+
+    .verdict-badge.off-target {
+      color: var(--accent-stamp);
+      background-color: #f9e6e4;
+    }
+
+    .spotter-radio-box {
+      background-color: #fbf8f1;
+      border-left: 3.5px solid var(--accent-stamp);
+      padding: 10px 12px;
+      margin-bottom: 12px;
+      font-size: 12.5px;
+    }
+
+    .spotter-radio-box .radio-tag {
+      display: block;
+      font-size: 10.5px;
+      font-weight: 700;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: var(--accent-stamp);
+      margin-bottom: 3px;
+    }
+
+    .results-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12.5px;
+      background-color: #fbf8f1;
+    }
+
+    .results-table th,
+    .results-table td {
+      border: 1px solid rgba(17, 18, 17, 0.25);
+      padding: 7px 10px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    .results-table th {
+      background-color: var(--paper-dark);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .status-pass {
+      color: var(--accent-ok);
+      font-weight: 700;
+    }
+
+    .status-fail {
+      color: var(--accent-stamp);
+      font-weight: 700;
+    }
+
+    .ref-footer {
+      font-size: 11.5px;
+      color: var(--ink-secondary);
+    }
+
+    .ref-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 10px 16px;
+      margin-top: 8px;
+    }
+
+    .ref-card {
+      background-color: var(--paper-alt);
+      border: 1px dashed rgba(17, 18, 17, 0.35);
+      padding: 10px 12px;
+    }
+
+    .ref-card strong {
+      display: block;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 4px;
+      color: var(--ink-primary);
+    }
+
+    .ballistic-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 8px;
+      font-size: 11.5px;
+      background-color: #fbf8f1;
+    }
+
+    .ballistic-table th,
+    .ballistic-table td {
+      border: 1px solid rgba(17, 18, 17, 0.25);
+      padding: 6px 8px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    .ballistic-table th {
+      background-color: var(--paper-dark);
+      font-size: 10.5px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--ink-primary);
+    }
+  </style>
+</head>
+<body>
+  <main id="teleprinter-sheet" class="teleprinter-sheet">
+    <header>
+      <div class="top-banner">
+        <span>FDC // M777A2 TELEPRINTER</span>
+        <span>SCALE: 1 CM = 500 M (1 MM = 50 M)</span>
+        <button id="sound-toggle-btn" type="button" class="sound-toggle-btn" aria-pressed="true">
+          AUDIO: ON
+        </button>
+      </div>
+      <h1>Artillery Plotting Mission Generator</h1>
+      <p class="subtitle">Offline Paper-and-Pencil Fire Direction Center (FDC) Trainer — 155 mm M777A2 Howitzer</p>
+    </header>
+
+    <hr class="tp-rule" />
+
+    <!-- A. Mission Type Selector & Generator -->
+    <section aria-labelledby="sec-controls">
+      <div class="section-header">
+        <h2 id="sec-controls" class="section-title">Fire Mission Generator</h2>
+        <span class="stamp-badge">ENVELOPE: 1,500 M – 9,500 M</span>
+      </div>
+      <div class="controls-row">
+        <div class="field-group">
+          <label for="mission-type-select">Mission Type</label>
+          <select id="mission-type-select">
+            <option value="random">random — Random Mission Type</option>
+            <option value="direct_grid">direct_grid — Direct Grid Plot</option>
+            <option value="polar_fo">polar_fo — Polar Plot from Observer</option>
+            <option value="two_station">two_station — Two-Station Azimuth Intersection</option>
+            <option value="compass_resection">compass_resection — Compass Arc Range Resection</option>
+            <option value="ot_shift">ot_shift — Observer-Target (OT) Shift</option>
+            <option value="moving_target">moving_target — Moving Target Lead</option>
+          </select>
+        </div>
+        <div>
+          <button id="generate-btn" type="button" class="action-btn primary">Generate Mission</button>
+        </div>
+      </div>
+    </section>
+
+    <hr class="tp-rule" />
+
+    <!-- B. Mission Briefing Sheet -->
+    <section aria-labelledby="sec-briefing">
+      <div class="section-header">
+        <h2 id="sec-briefing" class="section-title">Mission Briefing Sheet</h2>
+        <span id="mission-type-badge" class="stamp-badge">TYPE</span>
+      </div>
+      <div id="briefing-container" class="briefing-box"></div>
+    </section>
+
+    <hr class="tp-rule" />
+
+    <!-- C. Command Solution Guide Toggle -->
+    <section aria-labelledby="sec-guide">
+      <div class="section-header">
+        <h2 id="sec-guide" class="section-title">Command Solution Guide</h2>
+        <button id="toggle-guide-btn" type="button" class="action-btn secondary" aria-expanded="false" aria-controls="solution-guide-panel">
+          SHOW COMMAND SOLUTION GUIDE
+        </button>
+      </div>
+      <div id="solution-guide-panel" class="guide-panel" hidden></div>
+    </section>
+
+    <hr class="tp-rule" />
+
+    <!-- D. Firing Solution Input & Dispatch -->
+    <section aria-labelledby="sec-checker">
+      <div class="section-header">
+        <h2 id="sec-checker" class="section-title">M777A2 Firing Solution &amp; Dispatch</h2>
+        <span class="stamp-badge">HIT WINDOW: ±50 M (±0.2° EL / ±0.5° AZ / EXACT CHG)</span>
+      </div>
+
+      <form id="firing-form" class="firing-box" novalidate>
+        <div class="controls-row">
+          <div class="field-group compact">
+            <label for="azimuth-input">Azimuth (0° – 360°)</label>
+            <input id="azimuth-input" name="azimuth" type="number" step="0.1" min="0" max="360" placeholder="e.g. 042.5" />
+          </div>
+          <div class="field-group compact">
+            <label for="elevation-input">Elevation (deg)</label>
+            <input id="elevation-input" name="elevation" type="number" step="0.1" min="5" max="60" placeholder="e.g. 16.0" />
+          </div>
+          <div class="field-group compact">
+            <label for="charge-input">Charge Amount (1 – 5)</label>
+            <input id="charge-input" name="charge" type="number" step="1" min="1" max="5" placeholder="1 to 5" />
+          </div>
+          <div>
+            <button id="fire-mission-btn" type="submit" class="action-btn fire-btn">FIRE BATTERY</button>
+          </div>
+        </div>
+        <div id="form-error" class="error-msg" role="alert" hidden></div>
+      </form>
+
+      <div id="grading-container" class="grading-box" hidden></div>
+    </section>
+
+    <hr class="tp-rule" />
+
+    <!-- Reference Strip & Hand-Calculable M777A2 Ballistic Table -->
+    <footer class="ref-footer">
+      <strong>M777A2 HOWITZER REFERENCE &amp; HAND-CALCULABLE BALLISTICS (SAME ALTITUDE)</strong>
+      <div class="ref-grid">
+        <div class="ref-card">
+          <strong>Firing Batteries</strong>
+          BAT-A (Battery Alpha): (2.0, 2.0)<br />
+          BAT-B (Battery Bravo): (13.0, 3.0)
+        </div>
+        <div class="ref-card">
+          <strong>Scale &amp; Engagement Window</strong>
+          1.0 cm = 500 m · 1.0 mm = 50 m<br />
+          Range: 1,500 m (30.0 mm) – 9,500 m (190.0 mm)
+        </div>
+        <div class="ref-card">
+          <strong>Hit Requirement (±50 m / ±1.0 mm)</strong>
+          Range Offset: within ±50 m<br />
+          Elevation: ±0.2° · Azimuth: ±0.5° · Charge: Exact
+        </div>
+      </div>
+
+      <div class="ref-card" style="margin-top: 10px;">
+        <strong>M777A2 Charge &amp; Elevation Hand-Calculation Table (Same Altitude)</strong>
+        <p style="margin: 4px 0 6px 0;">
+          All points are at the same altitude. Measure Ground Range in 500 m / mm steps, pick the lowest Charge whose range window covers it, start at the Base Elevation, and add the degree step for each 500 m above that Charge's start range.
+        </p>
+        <table class="ballistic-table">
+          <thead>
+            <tr>
+              <th>Charge</th>
+              <th>M777A2 Charge Type</th>
+              <th>Range Window</th>
+              <th>Start Elev (at Min Range)</th>
+              <th>Add Per +500 m Above Start</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Charge 1</strong></td>
+              <td>M231 Inc 1 (Green)</td>
+              <td>1,500 m – 3,000 m</td>
+              <td>12.0° (at 1,500 m)</td>
+              <td>+4.0° per 500 m</td>
+            </tr>
+            <tr>
+              <td><strong>Charge 2</strong></td>
+              <td>M231 Inc 2 (Green)</td>
+              <td>2,500 m – 4,500 m</td>
+              <td>11.0° (at 2,500 m)</td>
+              <td>+3.0° per 500 m</td>
+            </tr>
+            <tr>
+              <td><strong>Charge 3</strong></td>
+              <td>M232/A1 Chg 3 (Tan)</td>
+              <td>4,000 m – 6,500 m</td>
+              <td>10.0° (at 4,000 m)</td>
+              <td>+2.5° per 500 m</td>
+            </tr>
+            <tr>
+              <td><strong>Charge 4</strong></td>
+              <td>M232/A1 Chg 4 (Tan)</td>
+              <td>5,500 m – 8,000 m</td>
+              <td>9.5° (at 5,500 m)</td>
+              <td>+2.0° per 500 m</td>
+            </tr>
+            <tr>
+              <td><strong>Charge 5</strong></td>
+              <td>M232/A1 Chg 5 (Tan)</td>
+              <td>7,000 m – 9,500 m</td>
+              <td>9.0° (at 7,000 m)</td>
+              <td>+1.5° per 500 m</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </footer>
+  </main>
+
+  <script>
+    (function () {
+      "use strict";
+
+      // =========================================================================
+      // 0. WEB AUDIO SYNTHESIZER (TELEPRINTER, HOWITZER FIRE & VERDICT TONES)
+      // =========================================================================
+      const SoundFX = (function () {
+        let ctx = null;
+        let enabled = true;
+        let noiseBuffer = null;
+
+        function ensureContext() {
+          if (!enabled) return null;
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          if (!AudioCtx) return null;
+          if (!ctx) {
+            ctx = new AudioCtx();
+          }
+          if (ctx.state === "suspended") {
+            ctx.resume().catch(function () {});
+          }
+          if (!noiseBuffer && ctx) {
+            const sampleRate = ctx.sampleRate;
+            const length = sampleRate * 1.5;
+            noiseBuffer = ctx.createBuffer(1, length, sampleRate);
+            const data = noiseBuffer.getChannelData(0);
+            for (let i = 0; i < length; i++) {
+              data[i] = Math.random() * 2 - 1;
+            }
+          }
+          return ctx;
+        }
+
+        function playSingleClick(audioCtx, offsetSec, pitchHz, gainPeak) {
+          const start = audioCtx.currentTime + offsetSec;
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = "triangle";
+          osc.frequency.setValueAtTime(pitchHz, start);
+          osc.frequency.exponentialRampToValueAtTime(140, start + 0.022);
+
+          gain.gain.setValueAtTime(0.0001, start);
+          gain.gain.linearRampToValueAtTime(gainPeak, start + 0.002);
+          gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.025);
+
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(start);
+          osc.stop(start + 0.028);
+        }
+
+        function playTeletype() {
+          const audioCtx = ensureContext();
+          if (!audioCtx) return;
+          const offsets = [0, 0.045, 0.088, 0.135];
+          const freqs = [1150, 980, 1280, 920];
+          for (let i = 0; i < offsets.length; i++) {
+            playSingleClick(audioCtx, offsets[i], freqs[i], 0.08);
+          }
+        }
+
+        function playClick() {
+          const audioCtx = ensureContext();
+          if (!audioCtx) return;
+          playSingleClick(audioCtx, 0, 1050, 0.07);
+        }
+
+        function playHowitzerFire(chargeNum) {
+          const audioCtx = ensureContext();
+          if (!audioCtx) return;
+          const now = audioCtx.currentTime;
+          const chargeScale = 0.82 + (Number(chargeNum) || 3) * 0.06;
+
+          const subOsc = audioCtx.createOscillator();
+          const subGain = audioCtx.createGain();
+          subOsc.type = "sine";
+          subOsc.frequency.setValueAtTime(135 * chargeScale, now);
+          subOsc.frequency.exponentialRampToValueAtTime(34, now + 0.42);
+
+          subGain.gain.setValueAtTime(0.001, now);
+          subGain.gain.linearRampToValueAtTime(0.45, now + 0.008);
+          subGain.gain.exponentialRampToValueAtTime(0.0008, now + 0.45);
+
+          subOsc.connect(subGain);
+          subGain.connect(audioCtx.destination);
+          subOsc.start(now);
+          subOsc.stop(now + 0.47);
+
+          if (noiseBuffer) {
+            const noise = audioCtx.createBufferSource();
+            noise.buffer = noiseBuffer;
+
+            const filter = audioCtx.createBiquadFilter();
+            filter.type = "lowpass";
+            filter.frequency.setValueAtTime(1800 * chargeScale, now);
+            filter.frequency.exponentialRampToValueAtTime(160, now + 0.36);
+
+            const nGain = audioCtx.createGain();
+            nGain.gain.setValueAtTime(0.001, now);
+            nGain.gain.linearRampToValueAtTime(0.32, now + 0.005);
+            nGain.gain.exponentialRampToValueAtTime(0.0008, now + 0.38);
+
+            noise.connect(filter);
+            filter.connect(nGain);
+            nGain.connect(audioCtx.destination);
+            noise.start(now);
+            noise.stop(now + 0.4);
+          }
+        }
+
+        function playVerdict(onTarget) {
+          const audioCtx = ensureContext();
+          if (!audioCtx) return;
+          const start = audioCtx.currentTime + 0.24;
+
+          if (onTarget) {
+            const notes = [660, 880];
+            notes.forEach(function (freq, idx) {
+              const t = start + idx * 0.11;
+              const osc = audioCtx.createOscillator();
+              const gain = audioCtx.createGain();
+              osc.type = "sine";
+              osc.frequency.setValueAtTime(freq, t);
+
+              gain.gain.setValueAtTime(0.0001, t);
+              gain.gain.linearRampToValueAtTime(0.14, t + 0.012);
+              gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.16);
+
+              osc.connect(gain);
+              gain.connect(audioCtx.destination);
+              osc.start(t);
+              osc.stop(t + 0.18);
+            });
+          } else {
+            for (let i = 0; i < 2; i++) {
+              const t = start + i * 0.15;
+              const osc = audioCtx.createOscillator();
+              const gain = audioCtx.createGain();
+              osc.type = "sawtooth";
+              osc.frequency.setValueAtTime(165, t);
+
+              gain.gain.setValueAtTime(0.0001, t);
+              gain.gain.linearRampToValueAtTime(0.11, t + 0.012);
+              gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.12);
+
+              osc.connect(gain);
+              gain.connect(audioCtx.destination);
+              osc.start(t);
+              osc.stop(t + 0.14);
+            }
+          }
+        }
+
+        function playErrorTone() {
+          const audioCtx = ensureContext();
+          if (!audioCtx) return;
+          const now = audioCtx.currentTime;
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = "square";
+          osc.frequency.setValueAtTime(220, now);
+
+          gain.gain.setValueAtTime(0.0001, now);
+          gain.gain.linearRampToValueAtTime(0.08, now + 0.01);
+          gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.11);
+
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(now);
+          osc.stop(now + 0.12);
+        }
+
+        function setEnabled(val) {
+          enabled = Boolean(val);
+          if (enabled) {
+            ensureContext();
+            playClick();
+          }
+          return enabled;
+        }
+
+        function isEnabled() {
+          return enabled;
+        }
+
+        return {
+          playTeletype,
+          playClick,
+          playHowitzerFire,
+          playVerdict,
+          playErrorTone,
+          setEnabled,
+          isEnabled
+        };
+      })();
+
+      // =========================================================================
+      // 1. CONSTANTS, HAND-CALCULABLE M777A2 BALLISTICS & GEOMETRIC / SCALE MATH
+      // =========================================================================
+      const GRID_WIDTH_CM = 15;
+      const GRID_HEIGHT_CM = 20;
+      const METERS_PER_CM = 500;
+      const METERS_PER_MM = 50;
+      const MM_PER_CM = 10;
+      const MIN_RANGE_M = 1500;
+      const MAX_RANGE_M = 9500;
+
+      const AZIMUTH_TOL_DEG = 0.5;
+      const ELEVATION_TOL_DEG = 0.2;
+      const HIT_TOLERANCE_M = 50;
+      const BALLISTIC_STEP_M = 500;
+      const MAX_REJECTION_ATTEMPTS = 150;
+
+      const BATTERIES = {
+        "BAT-A": { code: "BAT-A", name: "Battery Alpha", x: 2.0, y: 2.0 },
+        "BAT-B": { code: "BAT-B", name: "Battery Bravo", x: 13.0, y: 3.0 }
+      };
+
+      const M777A2_CHARGES = [
+        { charge: 1, prop: "M231 Inc 1 (Green)", minR: 1500, maxR: 3000, baseElev: 12.0, stepPer500m: 4.0 },
+        { charge: 2, prop: "M231 Inc 2 (Green)", minR: 2500, maxR: 4500, baseElev: 11.0, stepPer500m: 3.0 },
+        { charge: 3, prop: "M232/A1 Chg 3 (Tan)", minR: 4000, maxR: 6500, baseElev: 10.0, stepPer500m: 2.5 },
+        { charge: 4, prop: "M232/A1 Chg 4 (Tan)", minR: 5500, maxR: 8000, baseElev: 9.5, stepPer500m: 2.0 },
+        { charge: 5, prop: "M232/A1 Chg 5 (Tan)", minR: 7000, maxR: 9500, baseElev: 9.0, stepPer500m: 1.5 }
+      ];
+
+      const MISSION_TYPES = [
+        "direct_grid",
+        "polar_fo",
+        "two_station",
+        "compass_resection",
+        "ot_shift",
+        "moving_target"
+      ];
+
+      const MISSION_LABELS = {
+        direct_grid: "DIRECT GRID PLOT",
+        polar_fo: "POLAR PLOT FROM OBSERVER",
+        two_station: "TWO-STATION AZIMUTH INTERSECTION",
+        compass_resection: "COMPASS ARC RANGE RESECTION",
+        ot_shift: "OBSERVER-TARGET (OT) SHIFT",
+        moving_target: "MOVING TARGET LEAD"
+      };
+
+      const MISSION_DOCTRINE = {
+        direct_grid:
+          "Direct Grid Plot finds the firing solution straight from the firing battery to a known target grid coordinate at the same altitude. Plot both points on the 15 cm × 20 cm sheet, measure firing azimuth clockwise from Grid North (+Y) and ground range in meters, then pick the lowest valid charge and step up elevation by 500 m blocks.",
+        polar_fo:
+          "Polar Plot locates a target from a Forward Observer (FO) using a polar azimuth and polar range at the same altitude. Plot the FO position, project the azimuth and range vector to mark the target, and then measure azimuth, ground range, charge, and elevation from the assigned battery.",
+        two_station:
+          "Two-Station Azimuth Intersection locates a target where observation rays from OP-W and OP-E cross at the same altitude. Plot each OP, draw rays along their observed azimuths, mark the crossing point as the target, and then solve azimuth, range, charge, and elevation from the assigned battery.",
+        compass_resection:
+          "Compass Arc Range Resection finds a target where range circles from SNS-1 and SNS-2 cross at the same altitude. Convert each range in meters to map cm or mm, draw arcs around both sensors, pick the intersection matching the sector clue, and solve from the battery.",
+        ot_shift:
+          "Observer-Target (OT) Shift finds a target from a Reference Point (RP) using shifts relative to the FO-to-RP line at the same altitude. Trace the OT azimuth, apply Add/Drop and Right/Left shifts from the RP to plot the target, and then solve azimuth, range, charge, and elevation from the battery.",
+        moving_target:
+          "Moving Target Lead finds where a moving target reaches at the same altitude. Multiply speed by elapsed time to get travel distance, advance the initial sighting along the heading to mark the target, and solve azimuth, range, charge, and elevation from the battery."
+      };
+
+      function computeHandBallistics(rangeMeters) {
+        let chosen = M777A2_CHARGES[M777A2_CHARGES.length - 1];
+        for (let i = 0; i < M777A2_CHARGES.length; i++) {
+          const c = M777A2_CHARGES[i];
+          if (rangeMeters >= c.minR && rangeMeters <= c.maxR) {
+            chosen = c;
+            break;
+          }
+        }
+        const blocksOf500 = (rangeMeters - chosen.minR) / BALLISTIC_STEP_M;
+        const rawElev = chosen.baseElev + blocksOf500 * chosen.stepPer500m;
+        const elevationDeg = Math.round(rawElev * 10) / 10;
+        return {
+          charge: chosen.charge,
+          prop: chosen.prop,
+          minR: chosen.minR,
+          maxR: chosen.maxR,
+          baseElev: chosen.baseElev,
+          stepPer500m: chosen.stepPer500m,
+          blocksOf500: Math.round(blocksOf500 * 100) / 100,
+          addedDeg: Math.round(blocksOf500 * chosen.stepPer500m * 10) / 10,
+          elevationDeg
+        };
+      }
+
+      function normalizeAzimuth(deg) {
+        const val = Number(deg);
+        if (!Number.isFinite(val)) return NaN;
+        const mod = ((val % 360) + 360) % 360;
+        return Math.abs(mod - 360) < 1e-9 ? 0 : mod;
+      }
+
+      function formatAzimuth3(deg) {
+        const norm = normalizeAzimuth(deg);
+        const rounded = Math.round(norm * 10) / 10;
+        const [intPart, decPart] = rounded.toFixed(1).split(".");
+        const paddedInt = intPart.padStart(3, "0");
+        return decPart === "0" ? `${paddedInt}°` : `${paddedInt}.${decPart}°`;
+      }
+
+      function shortestSignedAngleDiff(aDeg, bDeg) {
+        const a = normalizeAzimuth(aDeg);
+        const b = normalizeAzimuth(bDeg);
+        let diff = ((a - b + 540) % 360) - 180;
+        if (diff === -180) diff = 180;
+        return diff;
+      }
+
+      function computeAzimuth(x1, y1, x2, y2) {
+        const dx = x2 - x1;
+        const dy = y2 - y1;
+        const deg = (Math.atan2(dx, dy) * 180) / Math.PI;
+        return normalizeAzimuth(deg);
+      }
+
+      function computeDistanceCm(x1, y1, x2, y2) {
+        return Math.hypot(x2 - x1, y2 - y1);
+      }
+
+      function cmToMeters(dCm) {
+        return dCm * METERS_PER_CM;
+      }
+
+      function metersToCm(meters) {
+        return meters / METERS_PER_CM;
+      }
+
+      function cmToMm(dCm) {
+        return dCm * MM_PER_CM;
+      }
+
+      function metersToMm(meters) {
+        return meters / METERS_PER_MM;
+      }
+
+      function projectPointMeters(x, y, azimuthDeg, distanceMeters) {
+        const rad = (normalizeAzimuth(azimuthDeg) * Math.PI) / 180;
+        const distCm = metersToCm(distanceMeters);
+        return {
+          x: x + distCm * Math.sin(rad),
+          y: y + distCm * Math.cos(rad)
+        };
+      }
+
+      function isInsideGrid(pt, margin = 0) {
+        return (
+          pt.x >= margin &&
+          pt.x <= GRID_WIDTH_CM - margin &&
+          pt.y >= margin &&
+          pt.y <= GRID_HEIGHT_CM - margin
+        );
+      }
+
+      function isValidEngagementRange(meters) {
+        return meters >= MIN_RANGE_M && meters <= MAX_RANGE_M;
+      }
+
+      function randInt(min, max) {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+      }
+
+      function randStep(min, max, step, decimals = 1) {
+        const steps = Math.round((max - min) / step);
+        const idx = randInt(0, steps);
+        const raw = min + idx * step;
+        const factor = Math.pow(10, decimals);
+        return Math.round(raw * factor) / factor;
+      }
+
+      function pickRandom(arr) {
+        return arr[Math.floor(Math.random() * arr.length)];
+      }
+
+      function fmtCoord(pt, decimals = 2) {
+        return `(${pt.x.toFixed(decimals)}, ${pt.y.toFixed(decimals)})`;
+      }
+
+      function fmtMeters(m, decimals = 0) {
+        return `${m.toFixed(decimals).replace(/\B(?=(\d{3})+(?!\d))/g, ",")} m`;
+      }
+
+      function fmtMm(mm, decimals = 1) {
+        return `${mm.toFixed(decimals)} mm`;
+      }
+
+      function fmtCm(cm, decimals = 2) {
+        return `${cm.toFixed(decimals)} cm`;
+      }
+
+      // =========================================================================
+      // 2. GEOMETRY SOLVERS FOR INTERSECTIONS & SHIFTS
+      // =========================================================================
+      function intersectRays(p1, az1Deg, p2, az2Deg) {
+        const r1 = (normalizeAzimuth(az1Deg) * Math.PI) / 180;
+        const r2 = (normalizeAzimuth(az2Deg) * Math.PI) / 180;
+        const d1x = Math.sin(r1);
+        const d1y = Math.cos(r1);
+        const d2x = Math.sin(r2);
+        const d2y = Math.cos(r2);
+
+        const denom = d1x * d2y - d1y * d2x;
+        if (Math.abs(denom) < 1e-7) return null;
+
+        const qpx = p2.x - p1.x;
+        const qpy = p2.y - p1.y;
+        const t = (qpx * d2y - qpy * d2x) / denom;
+        const s = (qpx * d1y - qpy * d1x) / denom;
+
+        if (t <= 0.2 || s <= 0.2) return null;
+
+        return {
+          x: p1.x + t * d1x,
+          y: p1.y + t * d1y
+        };
+      }
+
+      function circleCircleIntersections(c1, r1Cm, c2, r2Cm) {
+        const dx = c2.x - c1.x;
+        const dy = c2.y - c1.y;
+        const d = Math.hypot(dx, dy);
+        if (d < 1e-7 || d > r1Cm + r2Cm + 1e-7 || d < Math.abs(r1Cm - r2Cm) - 1e-7) {
+          return [];
+        }
+        const a = (r1Cm * r1Cm - r2Cm * r2Cm + d * d) / (2 * d);
+        const hSq = Math.max(0, r1Cm * r1Cm - a * a);
+        const h = Math.sqrt(hSq);
+        const xm = c1.x + (a * dx) / d;
+        const ym = c1.y + (a * dy) / d;
+        const rx = (-dy * h) / d;
+        const ry = (dx * h) / d;
+
+        const ptA = { x: xm + rx, y: ym + ry };
+        const ptB = { x: xm - rx, y: ym - ry };
+        if (h < 1e-6) return [ptA];
+        return [ptA, ptB];
+      }
+
+      function finalizeMission(type, battery, target, details, baseSteps) {
+        const distCm = computeDistanceCm(battery.x, battery.y, target.x, target.y);
+        const groundRangeM = cmToMeters(distCm);
+        if (!isInsideGrid(target, 0.5) || !isValidEngagementRange(groundRangeM)) {
+          return null;
+        }
+        const firingAzimuth = computeAzimuth(battery.x, battery.y, target.x, target.y);
+        const mapLengthMm = cmToMm(distCm);
+        const ballistics = computeHandBallistics(groundRangeM);
+
+        const ballisticSteps = [
+          `Ground Range is ${fmtMeters(groundRangeM, 0)} (${groundRangeM.toFixed(1)} m). Pick Charge ${ballistics.charge} (${ballistics.prop}, window ${fmtMeters(ballistics.minR)}–${fmtMeters(ballistics.maxR)}).`,
+          `Start at ${ballistics.baseElev.toFixed(1)}° (at ${fmtMeters(ballistics.minR)}) and add ${ballistics.addedDeg.toFixed(1)}° (${ballistics.blocksOf500} × ${BALLISTIC_STEP_M} m steps × ${ballistics.stepPer500m.toFixed(1)}°) for Elevation = ${ballistics.elevationDeg.toFixed(1)}° (hit margin: ±${HIT_TOLERANCE_M} m / ±${ELEVATION_TOL_DEG.toFixed(1)}°).`
+        ];
+
+        return {
+          type,
+          typeLabel: MISSION_LABELS[type],
+          doctrine: MISSION_DOCTRINE[type],
+          battery,
+          target,
+          firingAzimuth,
+          groundRangeM,
+          distCm,
+          mapLengthMm,
+          ballistics,
+          details,
+          steps: baseSteps.concat(ballisticSteps)
+        };
+      }
+
+      // =========================================================================
+      // 3. PROCEDURAL MISSION GENERATORS
+      // =========================================================================
+      function tryGenerateDirectGrid(battery) {
+        const tx = randStep(1.5, 13.5, 0.5, 1);
+        const ty = randStep(5.0, 18.5, 0.5, 1);
+        const target = { x: tx, y: ty };
+
+        const dCm = computeDistanceCm(battery.x, battery.y, target.x, target.y);
+        const rM = cmToMeters(dCm);
+        const az = computeAzimuth(battery.x, battery.y, target.x, target.y);
+        const mm = cmToMm(dCm);
+
+        const details = [
+          `Target Grid Coordinate: ${fmtCoord(target, 1)} cm (Same altitude)`,
+          `Firing Battery Position: ${battery.code} (${battery.name}) at ${fmtCoord(battery, 1)} cm`,
+          `Grid Scale Reference: 1.0 cm = 500 m · 1.0 mm = 50 m`
+        ];
+
+        const steps = [
+          `Plot ${battery.code} at ${fmtCoord(battery, 1)} cm and target at ${fmtCoord(target, 1)} cm on the 15 × 20 cm grid.`,
+          `Draw a straight line from ${battery.code} to the target.`,
+          `Measure clockwise from Grid North (+Y = 000°) at ${battery.code}: Azimuth = ${formatAzimuth3(az)}.`,
+          `Measure segment length: ${fmtCm(dCm, 2)} (${fmtMm(mm, 1)}) = ${fmtMeters(rM, 0)} Ground Range.`
+        ];
+
+        return finalizeMission("direct_grid", battery, target, details, steps);
+      }
+
+      function tryGeneratePolarFo(battery) {
+        const fo = {
+          x: randStep(2.0, 13.0, 0.5, 1),
+          y: randStep(5.0, 14.0, 0.5, 1)
+        };
+        const foAz = randInt(0, 359);
+        const foRng = randInt(6, 18) * 250;
+        const target = projectPointMeters(fo.x, fo.y, foAz, foRng);
+
+        if (!isInsideGrid(target, 1.0)) return null;
+
+        const foDistCm = metersToCm(foRng);
+        const foDistMm = metersToMm(foRng);
+        const batDistCm = computeDistanceCm(battery.x, battery.y, target.x, target.y);
+        const batRngM = cmToMeters(batDistCm);
+        const batAz = computeAzimuth(battery.x, battery.y, target.x, target.y);
+        const batMm = cmToMm(batDistCm);
+
+        const details = [
+          `Forward Observer FO-1 Position: ${fmtCoord(fo, 1)} cm (Same altitude)`,
+          `Polar Observation from FO-1: Azimuth ${formatAzimuth3(foAz)} · Polar Range ${fmtMeters(foRng, 0)} (${fmtMm(foDistMm, 1)} / ${fmtCm(foDistCm, 2)})`,
+          `Firing Battery: ${battery.code} (${battery.name}) at ${fmtCoord(battery, 1)} cm`
+        ];
+
+        const steps = [
+          `Plot Forward Observer FO-1 at ${fmtCoord(fo, 1)} cm.`,
+          `From FO-1, lay off azimuth ${formatAzimuth3(foAz)} clockwise from Grid North and measure ${fmtMeters(foRng, 0)} (${fmtMm(foDistMm, 1)} / ${fmtCm(foDistCm, 2)}) to mark target at ${fmtCoord(target, 2)} cm.`,
+          `Draw a line from ${battery.code} ${fmtCoord(battery, 1)} cm to target ${fmtCoord(target, 2)} cm and read Azimuth = ${formatAzimuth3(batAz)}.`,
+          `Measure ${battery.code}-to-target distance: ${fmtCm(batDistCm, 2)} (${fmtMm(batMm, 1)}) = ${fmtMeters(batRngM, 0)} Ground Range.`
+        ];
+
+        return finalizeMission("polar_fo", battery, target, details, steps);
+      }
+
+      function tryGenerateTwoStation(battery) {
+        const candidateTarget = {
+          x: randStep(2.0, 13.0, 0.5, 1),
+          y: randStep(6.0, 18.0, 0.5, 1)
+        };
+        const opW = {
+          x: randStep(1.0, 6.0, 0.5, 1),
+          y: randStep(4.5, 12.5, 0.5, 1)
+        };
+        const opE = {
+          x: randStep(9.0, 14.0, 0.5, 1),
+          y: randStep(4.5, 12.5, 0.5, 1)
+        };
+
+        const azW = Math.round(computeAzimuth(opW.x, opW.y, candidateTarget.x, candidateTarget.y));
+        const azE = Math.round(computeAzimuth(opE.x, opE.y, candidateTarget.x, candidateTarget.y));
+
+        const sep = Math.abs(shortestSignedAngleDiff(azW, azE));
+        if (sep < 25 || sep > 155) return null;
+
+        const target = intersectRays(opW, azW, opE, azE);
+        if (!target || !isInsideGrid(target, 1.0)) return null;
+
+        const batDistCm = computeDistanceCm(battery.x, battery.y, target.x, target.y);
+        const batRngM = cmToMeters(batDistCm);
+        const batAz = computeAzimuth(battery.x, battery.y, target.x, target.y);
+        const batMm = cmToMm(batDistCm);
+
+        const details = [
+          `West Observation Post (OP-W): ${fmtCoord(opW, 1)} cm · Observed Azimuth to Target: ${formatAzimuth3(azW)}`,
+          `East Observation Post (OP-E): ${fmtCoord(opE, 1)} cm · Observed Azimuth to Target: ${formatAzimuth3(azE)}`,
+          `Firing Battery: ${battery.code} (${battery.name}) at ${fmtCoord(battery, 1)} cm (Same altitude)`
+        ];
+
+        const steps = [
+          `Plot OP-W at ${fmtCoord(opW, 1)} cm and draw a ray along azimuth ${formatAzimuth3(azW)}.`,
+          `Plot OP-E at ${fmtCoord(opE, 1)} cm and draw a ray along azimuth ${formatAzimuth3(azE)}.`,
+          `Mark where the two rays cross as the target at ${fmtCoord(target, 2)} cm.`,
+          `Draw a line from ${battery.code} ${fmtCoord(battery, 1)} cm to ${fmtCoord(target, 2)} cm to read Azimuth = ${formatAzimuth3(batAz)} and measure ${fmtCm(batDistCm, 2)} (${fmtMm(batMm, 1)}) = ${fmtMeters(batRngM, 0)} Ground Range.`
+        ];
+
+        return finalizeMission("two_station", battery, target, details, steps);
+      }
+
+      function tryGenerateCompassResection(battery) {
+        const sns1 = {
+          x: randStep(1.5, 6.5, 0.5, 1),
+          y: randStep(5.0, 13.0, 0.5, 1)
+        };
+        const sns2 = {
+          x: randStep(8.5, 13.5, 0.5, 1),
+          y: randStep(5.0, 13.0, 0.5, 1)
+        };
+        const r1M = randInt(6, 18) * 250;
+        const r2M = randInt(6, 18) * 250;
+
+        const r1Cm = metersToCm(r1M);
+        const r2Cm = metersToCm(r2M);
+        const r1Mm = metersToMm(r1M);
+        const r2Mm = metersToMm(r2M);
+
+        const allIntersections = circleCircleIntersections(sns1, r1Cm, sns2, r2Cm);
+        const validIntersections = allIntersections.filter((pt) => isInsideGrid(pt, 1.0));
+        if (validIntersections.length === 0) return null;
+
+        const target = pickRandom(validIntersections);
+        const midY = (sns1.y + sns2.y) / 2;
+        const sectorClue =
+          validIntersections.length >= 2
+            ? target.y >= midY
+              ? "NORTHERN arc intersection (relative to sensors' midpoint Y)"
+              : "SOUTHERN arc intersection (relative to sensors' midpoint Y)"
+            : "Single valid arc intersection inside grid";
+
+        const batDistCm = computeDistanceCm(battery.x, battery.y, target.x, target.y);
+        const batRngM = cmToMeters(batDistCm);
+        const batAz = computeAzimuth(battery.x, battery.y, target.x, target.y);
+        const batMm = cmToMm(batDistCm);
+
+        const details = [
+          `Sensor SNS-1: ${fmtCoord(sns1, 1)} cm · Range: ${fmtMeters(r1M, 0)} (${fmtMm(r1Mm, 1)} / ${fmtCm(r1Cm, 2)})`,
+          `Sensor SNS-2: ${fmtCoord(sns2, 1)} cm · Range: ${fmtMeters(r2M, 0)} (${fmtMm(r2Mm, 1)} / ${fmtCm(r2Cm, 2)})`,
+          `Sector Clue: ${sectorClue}`,
+          `Firing Battery: ${battery.code} (${battery.name}) at ${fmtCoord(battery, 1)} cm (Same altitude)`
+        ];
+
+        const steps = [
+          `Plot SNS-1 at ${fmtCoord(sns1, 1)} cm and draw an arc of radius ${fmtCm(r1Cm, 2)} (${fmtMm(r1Mm, 1)} for ${fmtMeters(r1M, 0)}).`,
+          `Plot SNS-2 at ${fmtCoord(sns2, 1)} cm and draw an arc of radius ${fmtCm(r2Cm, 2)} (${fmtMm(r2Mm, 1)} for ${fmtMeters(r2M, 0)}).`,
+          `Select the ${sectorClue} at ${fmtCoord(target, 2)} cm.`,
+          `Draw a line from ${battery.code} ${fmtCoord(battery, 1)} cm to ${fmtCoord(target, 2)} cm to read Azimuth = ${formatAzimuth3(batAz)} and measure ${fmtCm(batDistCm, 2)} (${fmtMm(batMm, 1)}) = ${fmtMeters(batRngM, 0)} Ground Range.`
+        ];
+
+        return finalizeMission("compass_resection", battery, target, details, steps);
+      }
+
+      function tryGenerateOtShift(battery) {
+        const fo = {
+          x: randStep(2.0, 13.0, 0.5, 1),
+          y: randStep(4.5, 12.5, 0.5, 1)
+        };
+        const refPt = {
+          x: randStep(2.5, 12.5, 0.5, 1),
+          y: randStep(7.0, 16.5, 0.5, 1)
+        };
+        const otDistCm = computeDistanceCm(fo.x, fo.y, refPt.x, refPt.y);
+        if (otDistCm < 1.5) return null;
+
+        const shiftChoices = [-750, -600, -450, -300, -150, 0, 150, 300, 450, 600, 750];
+        let alongM = pickRandom(shiftChoices);
+        let perpM = pickRandom(shiftChoices);
+        if (alongM === 0 && perpM === 0) {
+          alongM = 300;
+        }
+
+        const otAz = computeAzimuth(fo.x, fo.y, refPt.x, refPt.y);
+
+        const alongAz = alongM >= 0 ? otAz : normalizeAzimuth(otAz + 180);
+        const alongAbsM = Math.abs(alongM);
+        const afterAlong =
+          alongAbsM > 0 ? projectPointMeters(refPt.x, refPt.y, alongAz, alongAbsM) : { x: refPt.x, y: refPt.y };
+
+        const perpAz = perpM >= 0 ? normalizeAzimuth(otAz + 90) : normalizeAzimuth(otAz - 90);
+        const perpAbsM = Math.abs(perpM);
+        const target =
+          perpAbsM > 0
+            ? projectPointMeters(afterAlong.x, afterAlong.y, perpAz, perpAbsM)
+            : { x: afterAlong.x, y: afterAlong.y };
+
+        if (!isInsideGrid(target, 1.0)) return null;
+
+        const alongWord = alongM > 0 ? `ADD ${fmtMeters(alongM, 0)}` : alongM < 0 ? `DROP ${fmtMeters(alongAbsM, 0)}` : "NO ALONG SHIFT (0 m)";
+        const perpWord = perpM > 0 ? `RIGHT ${fmtMeters(perpM, 0)}` : perpM < 0 ? `LEFT ${fmtMeters(perpAbsM, 0)}` : "NO LATERAL SHIFT (0 m)";
+
+        const batDistCm = computeDistanceCm(battery.x, battery.y, target.x, target.y);
+        const batRngM = cmToMeters(batDistCm);
+        const batAz = computeAzimuth(battery.x, battery.y, target.x, target.y);
+        const batMm = cmToMm(batDistCm);
+
+        const details = [
+          `Observer FO Position: ${fmtCoord(fo, 1)} cm (Same altitude)`,
+          `Reference Point (RP): ${fmtCoord(refPt, 1)} cm · OT Line Azimuth (FO → RP): ${formatAzimuth3(otAz)}`,
+          `Shift Order: ${alongWord} · ${perpWord}`,
+          `Firing Battery: ${battery.code} (${battery.name}) at ${fmtCoord(battery, 1)} cm`
+        ];
+
+        const steps = [
+          `Plot FO at ${fmtCoord(fo, 1)} cm and RP at ${fmtCoord(refPt, 1)} cm; OT line azimuth = ${formatAzimuth3(otAz)}.`,
+          `From RP ${fmtCoord(refPt, 1)} cm, apply ${alongWord} along azimuth ${formatAzimuth3(alongAz)} (${fmtMm(metersToMm(alongAbsM), 1)}) to ${fmtCoord(afterAlong, 2)} cm.`,
+          `Apply ${perpWord} along azimuth ${formatAzimuth3(perpAz)} (${fmtMm(metersToMm(perpAbsM), 1)}) to reach target at ${fmtCoord(target, 2)} cm.`,
+          `Draw a line from ${battery.code} ${fmtCoord(battery, 1)} cm to ${fmtCoord(target, 2)} cm to read Azimuth = ${formatAzimuth3(batAz)} and measure ${fmtCm(batDistCm, 2)} (${fmtMm(batMm, 1)}) = ${fmtMeters(batRngM, 0)} Ground Range.`
+        ];
+
+        return finalizeMission("ot_shift", battery, target, details, steps);
+      }
+
+      function tryGenerateMovingTarget(battery) {
+        const startPt = {
+          x: randStep(2.0, 13.0, 0.5, 1),
+          y: randStep(5.5, 17.5, 0.5, 1)
+        };
+        const headingDeg = pickRandom([0, 45, 90, 135, 180, 225, 270, 315]);
+        const speedMps = pickRandom([10, 15, 20]);
+        const timeSec = pickRandom([60, 90, 120]);
+
+        const travelMeters = speedMps * timeSec;
+        const travelCm = metersToCm(travelMeters);
+        const travelMm = metersToMm(travelMeters);
+        const target = projectPointMeters(startPt.x, startPt.y, headingDeg, travelMeters);
+
+        if (!isInsideGrid(target, 1.0)) return null;
+
+        const batDistCm = computeDistanceCm(battery.x, battery.y, target.x, target.y);
+        const batRngM = cmToMeters(batDistCm);
+        const batAz = computeAzimuth(battery.x, battery.y, target.x, target.y);
+        const batMm = cmToMm(batDistCm);
+
+        const details = [
+          `Initial Target Sighting: ${fmtCoord(startPt, 1)} cm (Same altitude)`,
+          `Target Heading: ${formatAzimuth3(headingDeg)} · Speed: ${speedMps} m/s · Elapsed Time: ${timeSec} s`,
+          `Computed Lead Displacement: ${fmtMeters(travelMeters, 0)} (${fmtMm(travelMm, 1)} / ${fmtCm(travelCm, 2)})`,
+          `Firing Battery: ${battery.code} (${battery.name}) at ${fmtCoord(battery, 1)} cm`
+        ];
+
+        const steps = [
+          `Multiply speed × time: ${speedMps} m/s × ${timeSec} s = ${fmtMeters(travelMeters, 0)} (${fmtMm(travelMm, 1)} / ${fmtCm(travelCm, 2)}).`,
+          `Plot initial sighting at ${fmtCoord(startPt, 1)} cm and advance along heading ${formatAzimuth3(headingDeg)} by ${fmtCm(travelCm, 2)} (${fmtMm(travelMm, 1)}) to mark target at ${fmtCoord(target, 2)} cm.`,
+          `Draw a line from ${battery.code} ${fmtCoord(battery, 1)} cm to ${fmtCoord(target, 2)} cm to read Azimuth = ${formatAzimuth3(batAz)} and measure ${fmtCm(batDistCm, 2)} (${fmtMm(batMm, 1)}) = ${fmtMeters(batRngM, 0)} Ground Range.`
+        ];
+
+        return finalizeMission("moving_target", battery, target, details, steps);
+      }
+
+      const GENERATORS = {
+        direct_grid: tryGenerateDirectGrid,
+        polar_fo: tryGeneratePolarFo,
+        two_station: tryGenerateTwoStation,
+        compass_resection: tryGenerateCompassResection,
+        ot_shift: tryGenerateOtShift,
+        moving_target: tryGenerateMovingTarget
+      };
+
+      function buildGuaranteedFallback(requestedType, battery) {
+        const target = battery.code === "BAT-A" ? { x: 7.5, y: 11.5 } : { x: 8.5, y: 11.0 };
+        const distCm = computeDistanceCm(battery.x, battery.y, target.x, target.y);
+        const groundRangeM = cmToMeters(distCm);
+        const firingAzimuth = computeAzimuth(battery.x, battery.y, target.x, target.y);
+        const mapLengthMm = cmToMm(distCm);
+        const type = requestedType === "random" ? "direct_grid" : requestedType;
+        const ballistics = computeHandBallistics(groundRangeM);
+
+        return {
+          type,
+          typeLabel: MISSION_LABELS[type],
+          doctrine: MISSION_DOCTRINE[type],
+          battery,
+          target,
+          firingAzimuth,
+          groundRangeM,
+          distCm,
+          mapLengthMm,
+          ballistics,
+          details: [
+            `Target Grid Coordinate: ${fmtCoord(target, 1)} cm (Same altitude · Fallback Solution)`,
+            `Firing Battery: ${battery.code} (${battery.name}) at ${fmtCoord(battery, 1)} cm`
+          ],
+          steps: [
+            `Plot ${battery.code} at ${fmtCoord(battery, 1)} cm and target at ${fmtCoord(target, 1)} cm.`,
+            `Read Azimuth = ${formatAzimuth3(firingAzimuth)} and measure ${fmtCm(distCm, 2)} (${fmtMm(mapLengthMm, 1)}) = ${fmtMeters(groundRangeM, 0)} Ground Range.`,
+            `Pick Charge ${ballistics.charge} (${ballistics.prop}) and step from ${ballistics.baseElev.toFixed(1)}° to Elevation = ${ballistics.elevationDeg.toFixed(1)}°.`
+          ]
+        };
+      }
+
+      function generateMission(selectedOption) {
+        const type = selectedOption === "random" ? pickRandom(MISSION_TYPES) : selectedOption;
+        const generator = GENERATORS[type] || tryGenerateDirectGrid;
+
+        for (let attempt = 0; attempt < MAX_REJECTION_ATTEMPTS; attempt++) {
+          const battery = pickRandom([BATTERIES["BAT-A"], BATTERIES["BAT-B"]]);
+          const mission = generator(battery);
+          if (mission) return mission;
+        }
+
+        const fallbackBattery = pickRandom([BATTERIES["BAT-A"], BATTERIES["BAT-B"]]);
+        return buildGuaranteedFallback(type, fallbackBattery);
+      }
+
+      // =========================================================================
+      // 4. RENDERING, FIRING INPUT VALIDATION & SPOTTER-STYLE GRADING
+      // =========================================================================
+      const sheetEl = document.getElementById("teleprinter-sheet");
+      const soundToggleBtn = document.getElementById("sound-toggle-btn");
+      const selectEl = document.getElementById("mission-type-select");
+      const generateBtn = document.getElementById("generate-btn");
+      const badgeEl = document.getElementById("mission-type-badge");
+      const briefingEl = document.getElementById("briefing-container");
+      const toggleGuideBtn = document.getElementById("toggle-guide-btn");
+      const guidePanelEl = document.getElementById("solution-guide-panel");
+
+      const firingFormEl = document.getElementById("firing-form");
+      const azimuthInputEl = document.getElementById("azimuth-input");
+      const elevationInputEl = document.getElementById("elevation-input");
+      const chargeInputEl = document.getElementById("charge-input");
+      const formErrorEl = document.getElementById("form-error");
+      const gradingEl = document.getElementById("grading-container");
+
+      let currentMission = null;
+      let guideVisible = false;
+
+      function escapeHtml(str) {
+        return String(str)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
+      }
+
+      function renderBriefing(mission) {
+        badgeEl.textContent = mission.typeLabel;
+
+        const summaryMap = {
+          direct_grid: `Plot the target at the same altitude and find firing azimuth, elevation, and charge from ${mission.battery.code}.`,
+          polar_fo: `Plot the target from FO-1 at the same altitude, then find firing azimuth, elevation, and charge from ${mission.battery.code}.`,
+          two_station: `Intersect rays from OP-W and OP-E at the same altitude to find the target, then solve azimuth, elevation, and charge from ${mission.battery.code}.`,
+          compass_resection: `Intersect range arcs from SNS-1 and SNS-2 at the same altitude using the sector clue, then solve azimuth, elevation, and charge from ${mission.battery.code}.`,
+          ot_shift: `Plot Reference Point (RP) and apply the OT shift at the same altitude to find the target, then solve azimuth, elevation, and charge from ${mission.battery.code}.`,
+          moving_target: `Advance the initial sighting by target lead along heading at the same altitude, then solve azimuth, elevation, and charge from ${mission.battery.code}.`
+        };
+
+        const intelItemsHtml = mission.details
+          .map((line) => `<li>${escapeHtml(line)}</li>`)
+          .join("");
+
+        briefingEl.innerHTML = `
+          <div class="briefing-meta-grid">
+            <div class="meta-item">
+              <span class="k">Mission Type</span>
+              <span class="v">${escapeHtml(mission.typeLabel)}</span>
+            </div>
+            <div class="meta-item">
+              <span class="k">Firing Battery</span>
+              <span class="v">${escapeHtml(mission.battery.code)} — ${escapeHtml(mission.battery.name)}</span>
+            </div>
+            <div class="meta-item">
+              <span class="k">Battery Grid &amp; Altitude</span>
+              <span class="v">${escapeHtml(fmtCoord(mission.battery, 1))} cm · Same altitude</span>
+            </div>
+          </div>
+          <p class="mission-summary"><strong>TASKING:</strong> ${escapeHtml(summaryMap[mission.type] || "")}</p>
+          <ul class="intel-list">${intelItemsHtml}</ul>
+        `;
+      }
+
+      function renderSolutionGuide(mission) {
+        const stepsHtml = mission.steps
+          .map((step) => `<li>${escapeHtml(step)}</li>`)
+          .join("");
+
+        guidePanelEl.innerHTML = `
+          <h3 class="guide-subhead">1. Mission Type Doctrine</h3>
+          <p style="margin: 0 0 12px 0; font-size: 13px;">${escapeHtml(mission.doctrine)}</p>
+          <hr class="tp-rule solid-thin" />
+          <h3 class="guide-subhead">2. Step-by-Step Plotting &amp; Ballistic Solution</h3>
+          <ol class="guide-steps">${stepsHtml}</ol>
+          <hr class="tp-rule solid-thin" />
+          <p style="margin: 0; font-size: 13px;">
+            <strong>EXPECTED SOLUTION:</strong>
+            Azimuth = <strong>${escapeHtml(formatAzimuth3(mission.firingAzimuth))}</strong> (${escapeHtml(mission.firingAzimuth.toFixed(1))}°) ·
+            Elevation = <strong>${escapeHtml(mission.ballistics.elevationDeg.toFixed(1))}°</strong> ·
+            Charge = <strong>${escapeHtml(String(mission.ballistics.charge))}</strong> (${escapeHtml(mission.ballistics.prop)}) ·
+            Ground Range = <strong>${escapeHtml(fmtMeters(mission.groundRangeM, 0))}</strong> (${escapeHtml(fmtMm(mission.mapLengthMm, 1))}) ·
+            Target Grid = <strong>${escapeHtml(fmtCoord(mission.target, 2))} cm</strong>
+          </p>
+        `;
+      }
+
+      function setGuideVisibility(show) {
+        guideVisible = Boolean(show);
+        guidePanelEl.hidden = !guideVisible;
+        toggleGuideBtn.setAttribute("aria-expanded", String(guideVisible));
+        toggleGuideBtn.textContent = guideVisible
+          ? "HIDE COMMAND SOLUTION GUIDE"
+          : "SHOW COMMAND SOLUTION GUIDE";
+      }
+
+      function handleGenerateMission(playSound = true) {
+        currentMission = generateMission(selectEl.value);
+        renderBriefing(currentMission);
+        renderSolutionGuide(currentMission);
+
+        azimuthInputEl.value = "";
+        elevationInputEl.value = "";
+        chargeInputEl.value = "";
+        formErrorEl.hidden = true;
+        formErrorEl.textContent = "";
+        gradingEl.hidden = true;
+        gradingEl.innerHTML = "";
+
+        if (playSound) {
+          SoundFX.playTeletype();
+        }
+      }
+
+      function buildSpotterCallout(azPass, signedAzDelta, lateralMissM, elPass, approxRangeOffsetM, within50mWindow, chgPass, chgDelta) {
+        const parts = [];
+
+        if (azPass) {
+          parts.push("LINE IS GOOD");
+        } else {
+          const dirWord = signedAzDelta > 0 ? "RIGHT" : "LEFT";
+          const latAbs = Math.max(1, Math.round(Math.abs(lateralMissM)));
+          parts.push(`${dirWord} ${latAbs} M`);
+        }
+
+        if (elPass && within50mWindow) {
+          parts.push("RANGE GOOD");
+        } else {
+          const rngAbs = Math.max(1, Math.round(Math.abs(approxRangeOffsetM)));
+          if (approxRangeOffsetM < 0) {
+            parts.push(`SHORT ${rngAbs} M`);
+          } else {
+            parts.push(`OVER ${rngAbs} M`);
+          }
+        }
+
+        if (!chgPass) {
+          parts.push(chgDelta < 0 ? "CHARGE UNDER-POWERED" : "CHARGE OVER-POWERED");
+        }
+
+        return `SPOTTER: "${parts.join(", ")}."`;
+      }
+
+      function handleFireSubmit(event) {
+        event.preventDefault();
+        if (!currentMission) return;
+
+        const rawAz = azimuthInputEl.value.trim();
+        const rawEl = elevationInputEl.value.trim();
+        const rawChg = chargeInputEl.value.trim();
+
+        const userAz = Number(rawAz);
+        const userEl = Number(rawEl);
+        const userChg = Number(rawChg);
+
+        if (rawAz === "" || !Number.isFinite(userAz)) {
+          formErrorEl.textContent = "ENTER A VALID AZIMUTH IN DEGREES (0° – 360°).";
+          formErrorEl.hidden = false;
+          SoundFX.playErrorTone();
+          return;
+        }
+        if (rawEl === "" || !Number.isFinite(userEl) || userEl < 0 || userEl > 75) {
+          formErrorEl.textContent = "ENTER A VALID ELEVATION IN DEGREES (0° – 75°).";
+          formErrorEl.hidden = false;
+          SoundFX.playErrorTone();
+          return;
+        }
+        if (rawChg === "" || !Number.isInteger(userChg) || userChg < 1 || userChg > 5) {
+          formErrorEl.textContent = "ENTER A VALID CHARGE AMOUNT (INTEGER 1 – 5).";
+          formErrorEl.hidden = false;
+          SoundFX.playErrorTone();
+          return;
+        }
+
+        formErrorEl.hidden = true;
+        formErrorEl.textContent = "";
+
+        sheetEl.classList.remove("recoil");
+        void sheetEl.offsetWidth;
+        sheetEl.classList.add("recoil");
+
+        const normUserAz = normalizeAzimuth(userAz);
+        const signedAzDelta = shortestSignedAngleDiff(normUserAz, currentMission.firingAzimuth);
+        const absAzDelta = Math.abs(signedAzDelta);
+
+        // Lateral displacement in meters at target range: R * sin(delta_az)
+        const lateralMissM = currentMission.groundRangeM * Math.sin((signedAzDelta * Math.PI) / 180);
+        const absLateralMissM = Math.abs(lateralMissM);
+
+        const elDelta = userEl - currentMission.ballistics.elevationDeg;
+        const absElDelta = Math.abs(elDelta);
+
+        const stepDegPerM = currentMission.ballistics.stepPer500m / BALLISTIC_STEP_M;
+        const approxRangeOffsetM = Math.round(elDelta / stepDegPerM);
+        const absApproxRangeOffsetM = Math.abs(approxRangeOffsetM);
+        const within50mWindow = absApproxRangeOffsetM <= HIT_TOLERANCE_M;
+
+        const chgDelta = userChg - currentMission.ballistics.charge;
+
+        const azPass = absAzDelta <= AZIMUTH_TOL_DEG;
+        const elPass = absElDelta <= ELEVATION_TOL_DEG && within50mWindow;
+        const chgPass = chgDelta === 0;
+        const overallPass = azPass && elPass && chgPass;
+
+        SoundFX.playHowitzerFire(userChg);
+        SoundFX.playVerdict(overallPass);
+
+        const spotterLine = buildSpotterCallout(
+          azPass,
+          signedAzDelta,
+          lateralMissM,
+          elPass,
+          approxRangeOffsetM,
+          within50mWindow,
+          chgPass,
+          chgDelta
+        );
+
+        const azObservation = azPass
+          ? `Line on target (off-line ≈ ${Math.round(absLateralMissM)} m)`
+          : `${signedAzDelta > 0 ? "RIGHT" : "LEFT"} ≈ ${Math.round(absLateralMissM)} m off line`;
+
+        const elObservation =
+          approxRangeOffsetM === 0
+            ? "Observed on range line"
+            : approxRangeOffsetM < 0
+              ? `Observed SHORT ≈ ${Math.abs(approxRangeOffsetM)} m`
+              : `Observed OVER ≈ ${Math.abs(approxRangeOffsetM)} m`;
+
+        const chgObservation = chgPass
+          ? "Propellant impulse matches target range"
+          : chgDelta < 0
+            ? "Round appears under-charged for range"
+            : "Round appears over-charged for range";
+
+        const headerContext = overallPass
+          ? `Target Grid: <strong>${escapeHtml(fmtCoord(currentMission.target, 2))} cm</strong> · Range: <strong>${escapeHtml(fmtMeters(currentMission.groundRangeM, 0))}</strong> (${escapeHtml(fmtMm(currentMission.mapLengthMm, 1))})`
+          : `Battery: <strong>${escapeHtml(currentMission.battery.code)}</strong> · Spotter observing from sector · Hit window: <strong>±${HIT_TOLERANCE_M} m</strong>`;
+
+        const expectedAzCell = overallPass
+          ? `${escapeHtml(formatAzimuth3(currentMission.firingAzimuth))} (${escapeHtml(currentMission.firingAzimuth.toFixed(1))}°)`
+          : "<em>Unobserved — adjust line</em>";
+
+        const expectedElCell = overallPass
+          ? `${escapeHtml(currentMission.ballistics.elevationDeg.toFixed(1))}°`
+          : "<em>Unobserved — adjust range</em>";
+
+        const expectedChgCell = overallPass
+          ? `Charge ${escapeHtml(String(currentMission.ballistics.charge))} (${escapeHtml(currentMission.ballistics.prop)})`
+          : "<em>Unobserved — check charge</em>";
+
+        gradingEl.innerHTML = `
+          <div class="verdict-line">
+            <span class="verdict-badge ${overallPass ? "on-target" : "off-target"}">
+              ${overallPass ? "SPLASH — ON TARGET" : "ROUND OUT — OFF TARGET"}
+            </span>
+            <span style="font-size: 12px; color: var(--ink-secondary);">
+              ${headerContext}
+            </span>
+          </div>
+          ${
+            overallPass
+              ? ""
+              : `<div class="spotter-radio-box">
+                   <span class="radio-tag">FORWARD OBSERVER NET // ROUND CORRECTION</span>
+                   <strong>${escapeHtml(spotterLine)}</strong>
+                 </div>`
+          }
+          <table class="results-table">
+            <thead>
+              <tr>
+                <th>Firing Element</th>
+                <th>Fired Input</th>
+                <th>Solution Reference</th>
+                <th>Spotter Observation / Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Azimuth</strong><br /><span style="font-size:11px; color:var(--ink-muted);">Margin: ±${AZIMUTH_TOL_DEG.toFixed(1)}°</span></td>
+                <td>${escapeHtml(formatAzimuth3(normUserAz))} (${escapeHtml(normUserAz.toFixed(1))}°)</td>
+                <td>${expectedAzCell}</td>
+                <td>
+                  <strong>${escapeHtml(azObservation)}</strong><br />
+                  <span class="${azPass ? "status-pass" : "status-fail"}">${azPass ? "WITHIN AZIMUTH MARGIN" : "OUTSIDE AZIMUTH MARGIN"}</span>
+                </td>
+              </tr>
+              <tr>
+                <td><strong>Elevation</strong><br /><span style="font-size:11px; color:var(--ink-muted);">Margin: ±${HIT_TOLERANCE_M} m / ±${ELEVATION_TOL_DEG.toFixed(1)}°</span></td>
+                <td>${escapeHtml(userEl.toFixed(1))}°</td>
+                <td>${expectedElCell}</td>
+                <td>
+                  <strong>${escapeHtml(elObservation)}</strong><br />
+                  <span class="${elPass ? "status-pass" : "status-fail"}">${elPass ? "WITHIN ±50 M HIT" : "OUTSIDE ±50 M HIT"}</span> ·
+                  <span class="${within50mWindow ? "status-pass" : "status-fail"}">${within50mWindow ? "≤ 50 M OFFSET" : "> 50 M OFFSET"}</span>
+                </td>
+              </tr>
+              <tr>
+                <td><strong>Charge Amount</strong><br /><span style="font-size:11px; color:var(--ink-muted);">Margin: Exact Charge</span></td>
+                <td>Charge ${escapeHtml(String(userChg))}</td>
+                <td>${expectedChgCell}</td>
+                <td>
+                  <strong>${escapeHtml(chgObservation)}</strong><br />
+                  <span class="${chgPass ? "status-pass" : "status-fail"}">${chgPass ? "CHARGE OK" : "CHARGE MISMATCH"}</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        `;
+        gradingEl.hidden = false;
+      }
+
+      // =========================================================================
+      // 5. EVENT BINDING & INITIALIZATION
+      // =========================================================================
+      soundToggleBtn.addEventListener("click", function () {
+        const nextState = SoundFX.setEnabled(!SoundFX.isEnabled());
+        soundToggleBtn.textContent = nextState ? "AUDIO: ON" : "AUDIO: MUTED";
+        soundToggleBtn.setAttribute("aria-pressed", String(nextState));
+        soundToggleBtn.classList.toggle("muted", !nextState);
+      });
+
+      generateBtn.addEventListener("click", function () {
+        handleGenerateMission(true);
+      });
+
+      toggleGuideBtn.addEventListener("click", function () {
+        setGuideVisibility(!guideVisible);
+        SoundFX.playClick();
+      });
+
+      firingFormEl.addEventListener("submit", handleFireSubmit);
+
+      handleGenerateMission(false);
+    })();
+  </script>
+</body>
+</html>
