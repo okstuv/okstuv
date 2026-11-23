@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Artillery – OK Stuv</title>
+  <link rel="stylesheet" href="../style.css">
+  <style>
+    .version-list {
+      list-style: none;
+      margin: 2rem 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+    .version-item {
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 1.25rem 1.5rem;
+      background: #fff;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .version-item:hover {
+      border-color: #888;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    .version-item h2 {
+      margin: 0 0 0.5rem;
+      font-size: 1.25rem;
+    }
+    .version-item h2 a {
+      text-decoration: none;
+      color: #111;
+    }
+    .version-item h2 a:hover {
+      text-decoration: underline;
+    }
+    .version-item p {
+      margin: 0;
+      font-size: 0.95rem;
+      color: #555;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <a class="site-title" href="../index.html">OK Stuv</a>
+  <nav>
+    <a href="../info/index.html">About Us</a>
+    <a href="../info/author.html">Author</a>
+    <a href="../info/faq.html">FAQ</a>
+    <a href="../graffiti/index.html">Graffiti</a>
+    <a href="../privacy-policy/index.html">Privacy Policy</a>
+  </nav>
+</header>
+
+<main>
+  <h1>Artillery Plotting &amp; Simulation</h1>
+  <p>Select an edition of the FDC Artillery Plotting and Mission Generator:</p>
+
+  <ul class="version-list">
+    <li class="version-item">
+      <h2><a href="https://okstuv.com/Artillery/index.html">Artillery v1: Manual mode</a></h2>
+      <p>Original manual plotting mode without map overlays or ballistic calculators.</p>
+    </li>
+    <li class="version-item">
+      <h2><a href="https://okstuv.com/artillery-maps/index.html">Artillery v2: with map</a></h2>
+      <p>Artillery plotting board enhanced with interactive tactical map overlays.</p>
+    </li>
+    <li class="version-item">
+      <h2><a href="https://okstuv.com/artillery-calc/index.html">Artillery v3: map &amp; calc</a></h2>
+      <p>Interactive tactical map combined with an integrated ballistic calculation engine.</p>
+    </li>
+    <li class="version-item">
+      <h2><a href="https://okstuv.com/artillery-realsat/index.html">Artillery v4: calc and realistic maps</a></h2>
+      <p>Full-featured ballistic calculator paired with realistic satellite terrain map rendering.</p>
+    </li>
+  </ul>
+</main>
+
+<footer>
+  <p>OK Stuv &mdash; It's just OK. &nbsp;|&nbsp; <a href="../privacy-policy/index.html">Privacy Policy</a></p>
+</footer>
+
+</body>
+</html>
